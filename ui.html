@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <style>
+    /* Estilos simples para una buena UX inicial */
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+      padding: 16px;
+      margin: 0;
+    }
+    h2 { margin-top: 0; }
+    button {
+      background-color: #0d99ff;
+      color: white;
+      border: none;
+      padding: 8px 16px;
+      border-radius: 4px;
+      width: 100%;
+      cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+  <h2>Color Token Creator</h2>
+  <p>Selecciona los grupos de color y haz clic en crear.</p>
+  <button id="create-button">Crear Variables</button>
+
+  <script>
+    const createBtn = document.getElementById('create-button');
+
+    createBtn.onclick = () => {
+      parent.postMessage({ pluginMessage: { type: 'create-variables' } }, '*');
+    }
+  </script>
+</body>
+</html>
