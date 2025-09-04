@@ -4,34 +4,121 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <style>
-    /* Estilos simples para una buena UX inicial */
+    /* Usamos variables CSS para un theming fácil y limpio */
+    :root {
+      --bg-color: #FFFFFF;
+      --text-color: #1F1F1F;
+      --text-color-secondary: #888888;
+      --border-color: #E5E5E5;
+      --button-bg: #0D99FF;
+      --button-text: #FFFFFF;
+    }
+
+    body.dark-mode {
+      --bg-color: #1F1F1F;
+      --text-color: #FFFFFF;
+      --text-color-secondary: #AAAAAA;
+      --border-color: #333333;
+    }
+
     body {
-      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background-color: var(--bg-color);
+      color: var(--text-color);
       padding: 16px;
       margin: 0;
+      transition: background-color 0.2s, color 0.2s;
     }
-    h2 { margin-top: 0; }
+    
+    .header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 16px;
+    }
+
+    h2 { margin: 0; font-size: 16px; }
+
+    #theme-toggle {
+      cursor: pointer;
+    }
+
+    p {
+      color: var(--text-color-secondary);
+      font-size: 12px;
+      margin: 0 0 16px 0;
+    }
+
     button {
-      background-color: #0d99ff;
-      color: white;
+      background-color: var(--button-bg);
+      color: var(--button-text);
       border: none;
-      padding: 8px 16px;
-      border-radius: 4px;
+      padding: 10px 16px;
+      border-radius: 8px; /* Bordes más redondeados */
       width: 100%;
       cursor: pointer;
+      font-weight: 600;
+    }
+
+    .footer {
+      margin-top: 16px;
+      border-top: 1px solid var(--border-color);
+      padding-top: 12px;
+      font-size: 12px;
+      color: var(--text-color-secondary);
+    }
+    
+    #created-count {
+      font-weight: 700;
+      color: var(--text-color);
     }
   </style>
 </head>
 <body>
-  <h2>Color Token Creator</h2>
-  <p>Selecciona los grupos de color y haz clic en crear.</p>
-  <button id="create-button">Crear Variables</button>
+  <div class="header">
+    <h2>Color Token Creator</h2>
+    <svg id="theme-toggle" width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <path d="M12 18C15.3137 18 18 15.3137 18 12C18 8.68629 15.3137 6 12 6C8.68629 6 6 8.68629 6 12C6 15.3137 8.68629 18 12 18Z" stroke="var(--text-color)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+      <path d="M12 2V4" stroke="var(--text-color)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+      <path d="M12 20V22" stroke="var(--text-color)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+      <path d="M4.92999 4.92999L6.34999 6.34999" stroke="var(--text-color)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+      <path d="M17.65 17.65L19.07 19.07" stroke="var(--text-color)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+      <path d="M2 12H4" stroke="var(--text-color)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+      <path d="M20 12H22" stroke="var(--text-color)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+      <path d="M4.92999 19.07L6.34999 17.65" stroke="var(--text-color)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+      <path d="M17.65 6.34999L19.07 4.92999" stroke="var(--text-color)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+    </svg>
+  </div>
+
+  <p>El texto debe tener formato CSS<br>
+  (ej: --color-brand-primary).</p>
+  <button id="create-button">Crear Estilos</button>
+
+  <div class="footer">
+    Creados en esta sesión: <span id="created-count">0</span>
+  </div>
 
   <script>
     const createBtn = document.getElementById('create-button');
+    const toggleBtn = document.getElementById('theme-toggle');
+    const countSpan = document.getElementById('created-count');
 
+    // Lógica para el botón de crear
     createBtn.onclick = () => {
-      parent.postMessage({ pluginMessage: { type: 'create-variables' } }, '*');
+      parent.postMessage({ pluginMessage: { type: 'create-styles' } }, '*');
+    }
+
+    // Lógica para el toggle de tema
+    toggleBtn.onclick = () => {
+      document.body.classList.toggle('dark-mode');
+    }
+
+    // Escuchamos mensajes desde el código principal (code.ts)
+    window.onmessage = (event) => {
+      const msg = event.data.pluginMessage;
+      if (msg.type === 'update-count') {
+        countSpan.textContent = msg.count;
+      }
     }
   </script>
 </body>
