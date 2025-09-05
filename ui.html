@@ -4,120 +4,129 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <style>
-    /* Usamos variables CSS para un theming fácil y limpio */
     :root {
-      --bg-color: #FFFFFF;
-      --text-color: #1F1F1F;
-      --text-color-secondary: #888888;
-      --border-color: #E5E5E5;
-      --button-bg: #0D99FF;
-      --button-text: #FFFFFF;
+      --bg-color: #FFFFFF; --text-color: #1F1F1F; --text-color-secondary: #888888;
+      --border-color: #E5E5E5; --button-bg: #0D99FF; --button-text: #FFFFFF;
+      --tab-inactive: #888888; --tab-active: #0D99FF;
     }
-
     body.dark-mode {
-      --bg-color: #1F1F1F;
-      --text-color: #FFFFFF;
-      --text-color-secondary: #AAAAAA;
-      --border-color: #333333;
+      --bg-color: #1F1F1F; --text-color: #FFFFFF; --text-color-secondary: #AAAAAA;
+      --border-color: #333333; --tab-inactive: #AAAAAA; --tab-active: #FFFFFF;
     }
-
     body {
-      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-      background-color: var(--bg-color);
-      color: var(--text-color);
-      padding: 16px;
-      margin: 0;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto;
+      background-color: var(--bg-color); color: var(--text-color);
+      padding: 0; margin: 0; font-size: 12px;
       transition: background-color 0.2s, color 0.2s;
     }
-    
-    .header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 16px;
+    .container { padding: 16px; }
+    .tabs {
+      display: flex; border-bottom: 1px solid var(--border-color);
     }
-
-    h2 { margin: 0; font-size: 16px; }
-
-    #theme-toggle {
-      cursor: pointer;
+    .tab-button {
+      flex: 1; background: none; border: none; padding: 10px;
+      cursor: pointer; font-weight: 600; color: var(--tab-inactive);
+      border-bottom: 2px solid transparent;
     }
-
-    p {
-      color: var(--text-color-secondary);
-      font-size: 12px;
-      margin: 0 0 16px 0;
+    .tab-button.active {
+      color: var(--tab-active); border-bottom-color: var(--tab-active);
     }
-
-    button {
-      background-color: var(--button-bg);
-      color: var(--button-text);
-      border: none;
-      padding: 10px 16px;
-      border-radius: 8px; /* Bordes más redondeados */
-      width: 100%;
-      cursor: pointer;
-      font-weight: 600;
+    p { color: var(--text-color-secondary); margin: 16px 0; }
+    #action-button {
+      background-color: var(--button-bg); color: var(--button-text); border: none;
+      padding: 10px 16px; border-radius: 8px; width: 100%; cursor: pointer; font-weight: 600;
     }
-
     .footer {
-      margin-top: 16px;
-      border-top: 1px solid var(--border-color);
-      padding-top: 12px;
-      font-size: 12px;
-      color: var(--text-color-secondary);
+      margin-top: 16px; border-top: 1px solid var(--border-color);
+      padding-top: 12px; color: var(--text-color-secondary); text-align: center;
     }
-    
-    #created-count {
-      font-weight: 700;
-      color: var(--text-color);
-    }
+    #created-count { font-weight: 700; color: var(--text-color); }
+    .hidden { display: none; }
   </style>
 </head>
 <body>
-  <div class="header">
-    <h2>Color Token Creator</h2>
-    <svg id="theme-toggle" width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-      <path d="M12 18C15.3137 18 18 15.3137 18 12C18 8.68629 15.3137 6 12 6C8.68629 6 6 8.68629 6 12C6 15.3137 8.68629 18 12 18Z" stroke="var(--text-color)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-      <path d="M12 2V4" stroke="var(--text-color)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-      <path d="M12 20V22" stroke="var(--text-color)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-      <path d="M4.92999 4.92999L6.34999 6.34999" stroke="var(--text-color)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-      <path d="M17.65 17.65L19.07 19.07" stroke="var(--text-color)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-      <path d="M2 12H4" stroke="var(--text-color)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-      <path d="M20 12H22" stroke="var(--text-color)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-      <path d="M4.92999 19.07L6.34999 17.65" stroke="var(--text-color)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-      <path d="M17.65 6.34999L19.07 4.92999" stroke="var(--text-color)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-    </svg>
+  <div class="tabs">
+    <button class="tab-button active" data-tab="design">Para Diseño</button>
+    <button class="tab-button" data-tab="devs">Para Desarrollo</button>
   </div>
 
-  <p>El texto debe tener formato CSS<br>
-  (ej: --color-brand-primary).</p>
-  <button id="create-button">Crear Estilos</button>
+  <div class="container">
+    <div id="tab-design-content">
+      <p>Selecciona grupos (forma + texto CSS) para crear Estilos de Color en Figma.</p>
+    </div>
 
-  <div class="footer">
-    Creados en esta sesión: <span id="created-count">0</span>
+    <div id="tab-devs-content" class="hidden">
+      <p>Selecciona capas de texto (ej: --color-brand #007BFF) para exportar a CSS.</p>
+    </div>
+    
+    <button id="action-button">Crear Estilos</button>
+
+    <div class="footer">
+      Total de Estilos Creados: <span id="created-count">0</span>
+    </div>
   </div>
-
-  <script>
-    const createBtn = document.getElementById('create-button');
-    const toggleBtn = document.getElementById('theme-toggle');
+    <script>
+    const createBtn = document.getElementById('action-button');
+    const toggleBtn = document.querySelectorAll('.tab-button'); // Corregido para seleccionar ambos botones
     const countSpan = document.getElementById('created-count');
+    const designTabContent = document.getElementById('tab-design-content');
+    const devsTabContent = document.getElementById('tab-devs-content');
+    let activeTab = 'design';
 
-    // Lógica para el botón de crear
+    // Lógica para cambiar de pestaña
+    toggleBtn.forEach(tab => {
+      tab.onclick = () => {
+        toggleBtn.forEach(t => t.classList.remove('active'));
+        tab.classList.add('active');
+        activeTab = tab.dataset.tab;
+        
+        if (activeTab === 'design') {
+          designTabContent.classList.remove('hidden');
+          devsTabContent.classList.add('hidden');
+          createBtn.textContent = 'Crear Estilos';
+        } else {
+          designTabContent.classList.add('hidden');
+          devsTabContent.classList.remove('hidden');
+          createBtn.textContent = 'Copiar CSS al Portapapeles';
+        }
+      }
+    });
+
+    // Lógica para el botón de acción principal
     createBtn.onclick = () => {
-      parent.postMessage({ pluginMessage: { type: 'create-styles' } }, '*');
+      if (activeTab === 'design') {
+        parent.postMessage({ pluginMessage: { type: 'create-styles' } }, '*');
+      } else {
+        parent.postMessage({ pluginMessage: { type: 'export-css' } }, '*');
+      }
     }
 
-    // Lógica para el toggle de tema
-    toggleBtn.onclick = () => {
-      document.body.classList.toggle('dark-mode');
-    }
-
-    // Escuchamos mensajes desde el código principal (code.ts)
+    // Escuchamos mensajes del código principal (code.ts)
     window.onmessage = (event) => {
       const msg = event.data.pluginMessage;
       if (msg.type === 'update-count') {
         countSpan.textContent = msg.count;
+      } else if (msg.type === 'css-to-clipboard') {
+        // --- LÓGICA DE COPIADO ROBUSTA ---
+        const textArea = document.createElement('textarea');
+        textArea.value = msg.css;
+        
+        // Hacemos el textarea invisible
+        textArea.style.position = 'fixed';
+        textArea.style.top = '-9999px';
+        textArea.style.left = '-9999px';
+        
+        document.body.appendChild(textArea);
+        textArea.select(); // Seleccionamos su contenido
+        
+        try {
+          document.execCommand('copy'); // Ejecutamos el comando de copiado
+          parent.postMessage({ pluginMessage: { type: 'notify', message: '✅ ¡CSS copiado al portapapeles!' } }, '*');
+        } catch (err) {
+          parent.postMessage({ pluginMessage: { type: 'notify', message: '❌ Error al copiar', error: true } }, '*');
+        }
+        
+        document.body.removeChild(textArea); // Limpiamos el textarea
       }
     }
   </script>
