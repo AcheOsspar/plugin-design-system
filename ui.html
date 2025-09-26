@@ -4,34 +4,130 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <style>
-    /* Estilos simples para una buena UX inicial */
+    :root {
+      --bg-color: #FFFFFF; --text-color: #1F1F1F; --text-color-secondary: #888888;
+      --border-color: #E5E5E5; --button-bg: #0D99FF; --button-text: #FFFFFF;
+      --tab-inactive: #888888; --tab-active: #0D99FF;
+    }
+    body.dark-mode {
+      --bg-color: #1F1F1F; --text-color: #FFFFFF; --text-color-secondary: #AAAAAA;
+      --border-color: #333333; --tab-inactive: #AAAAAA; --tab-active: #FFFFFF;
+    }
     body {
-      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
-      padding: 16px;
-      margin: 0;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto;
+      background-color: var(--bg-color); color: var(--text-color);
+      padding: 0; margin: 0; font-size: 12px;
+      transition: background-color 0.2s, color 0.2s;
     }
-    h2 { margin-top: 0; }
-    button {
-      background-color: #0d99ff;
-      color: white;
-      border: none;
-      padding: 8px 16px;
-      border-radius: 4px;
-      width: 100%;
-      cursor: pointer;
+    .container { padding: 16px; }
+    .tabs {
+      display: flex; border-bottom: 1px solid var(--border-color);
     }
+    .tab-button {
+      flex: 1; background: none; border: none; padding: 10px;
+      cursor: pointer; font-weight: 600; color: var(--tab-inactive);
+      border-bottom: 2px solid transparent;
+    }
+    .tab-button.active {
+      color: var(--tab-active); border-bottom-color: var(--tab-active);
+    }
+    p { color: var(--text-color-secondary); margin: 16px 0; }
+    #action-button {
+      background-color: var(--button-bg); color: var(--button-text); border: none;
+      padding: 10px 16px; border-radius: 8px; width: 100%; cursor: pointer; font-weight: 600;
+    }
+    .footer {
+      margin-top: 16px; border-top: 1px solid var(--border-color);
+      padding-top: 12px; color: var(--text-color-secondary); text-align: center;
+    }
+    #created-count { font-weight: 700; color: var(--text-color); }
+    .hidden { display: none; }
   </style>
 </head>
 <body>
-  <h2>Color Token Creator</h2>
-  <p>Selecciona los grupos de color y haz clic en crear.</p>
-  <button id="create-button">Crear Variables</button>
+  <div class="tabs">
+    <button class="tab-button active" data-tab="design">Para Diseño</button>
+    <button class="tab-button" data-tab="devs">Para Desarrollo</button>
+  </div>
 
-  <script>
-    const createBtn = document.getElementById('create-button');
+  <div class="container">
+    <div id="tab-design-content">
+      <p>Selecciona grupos (forma + texto CSS) para crear Estilos de Color en Figma.</p>
+    </div>
 
+    <div id="tab-devs-content" class="hidden">
+      <p>Selecciona capas de texto (ej: --color-brand #007BFF) para exportar a CSS.</p>
+    </div>
+    
+    <button id="action-button">Crear Estilos</button>
+
+    <div class="footer">
+      Total de Estilos Creados: <span id="created-count">0</span>
+    </div>
+  </div>
+    <script>
+    const createBtn = document.getElementById('action-button');
+    const toggleBtn = document.querySelectorAll('.tab-button'); // Corregido para seleccionar ambos botones
+    const countSpan = document.getElementById('created-count');
+    const designTabContent = document.getElementById('tab-design-content');
+    const devsTabContent = document.getElementById('tab-devs-content');
+    let activeTab = 'design';
+
+    // Lógica para cambiar de pestaña
+    toggleBtn.forEach(tab => {
+      tab.onclick = () => {
+        toggleBtn.forEach(t => t.classList.remove('active'));
+        tab.classList.add('active');
+        activeTab = tab.dataset.tab;
+        
+        if (activeTab === 'design') {
+          designTabContent.classList.remove('hidden');
+          devsTabContent.classList.add('hidden');
+          createBtn.textContent = 'Crear Estilos';
+        } else {
+          designTabContent.classList.add('hidden');
+          devsTabContent.classList.remove('hidden');
+          createBtn.textContent = 'Copiar CSS al Portapapeles';
+        }
+      }
+    });
+
+    // Lógica para el botón de acción principal
     createBtn.onclick = () => {
-      parent.postMessage({ pluginMessage: { type: 'create-variables' } }, '*');
+      if (activeTab === 'design') {
+        parent.postMessage({ pluginMessage: { type: 'create-styles' } }, '*');
+      } else {
+        parent.postMessage({ pluginMessage: { type: 'export-css' } }, '*');
+      }
+    }
+
+    // Escuchamos mensajes del código principal (code.ts)
+    window.onmessage = (event) => {
+      const msg = event.data.pluginMessage;
+      if (msg.type === 'update-count') {
+        countSpan.textContent = msg.count;
+      } else if (msg.type === 'css-to-clipboard') {
+        // --- LÓGICA DE COPIADO ROBUSTA ---
+        const textArea = document.createElement('textarea');
+        textArea.value = msg.css;
+        
+        // Hacemos el textarea invisible
+        textArea.style.position = 'fixed';
+        textArea.style.top = '-9999px';
+        textArea.style.left = '-9999px';
+        
+        document.body.appendChild(textArea);
+        textArea.select(); // Seleccionamos su contenido
+        
+        try {
+          document.execCommand('copy'); // Ejecutamos el comando de copiado
+          parent.postMessage({ pluginMessage: { type: 'notify', message: '✅ ¡CSS copiado al portapapeles!' } }, '*');
+        } catch (err) {
+          parent.postMessage({ pluginMessage: { type: 'notify', message: '❌ Error al copiar', error: true } }, '*');
+        }
+        
+        document.body.removeChild(textArea); // Limpiamos el textarea
+      }
     }
   </script>
 </body>
