@@ -42,6 +42,17 @@
     }
     #created-count { font-weight: 700; color: var(--text-color); }
     .hidden { display: none; }
+    /* Code viewer styles */
+    .code-viewer {
+      margin-top: 12px; border: 1px solid var(--border-color); border-radius: 8px; padding: 8px;
+      background: rgba(0,0,0,0.02); position: relative;
+    }
+    .code-actions { display:flex; gap:8px; margin-bottom:8px; }
+    .code-actions button { padding:6px 10px; border-radius:6px; border:none; cursor:pointer; font-weight:600 }
+    .code-actions .copy { background: var(--button-bg); color: var(--button-text) }
+    .code-actions .download { background:#e6e6e6 }
+    .code-actions .close { background:transparent; color:var(--tab-inactive); }
+    pre.code-block { white-space:pre-wrap; max-height:240px; overflow:auto; background:transparent; margin:0; font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, 'Roboto Mono', 'Segoe UI Mono', monospace; font-size:11px; color:var(--text-color); }
   </style>
 </head>
 <body>
@@ -57,6 +68,15 @@
 
     <div id="tab-devs-content" class="hidden">
       <p>Selecciona capas de texto (ej: --color-brand #007BFF) para exportar a CSS.</p>
+      <!-- Code viewer for exported CSS -->
+      <div id="code-viewer" class="code-viewer hidden" aria-hidden="true">
+        <div class="code-actions">
+          <button class="copy" id="copy-css">Copiar CSS</button>
+          <button class="download" id="download-css">Descargar .css</button>
+          <button class="close" id="close-viewer" aria-label="Cerrar visor">Cerrar</button>
+        </div>
+        <pre class="code-block" id="css-block" tabindex="0" role="region" aria-label="Vista previa de CSS">/* CSS export will appear here */</pre>
+      </div>
     </div>
     
     <button id="action-button">Crear Estilos</button>
@@ -104,30 +124,69 @@
     // Escuchamos mensajes del código principal (code.ts)
     window.onmessage = (event) => {
       const msg = event.data.pluginMessage;
+      if (!msg || !msg.type) return;
       if (msg.type === 'update-count') {
         countSpan.textContent = msg.count;
       } else if (msg.type === 'css-to-clipboard') {
-        // --- LÓGICA DE COPIADO ROBUSTA ---
-        const textArea = document.createElement('textarea');
-        textArea.value = msg.css;
-        
-        // Hacemos el textarea invisible
-        textArea.style.position = 'fixed';
-        textArea.style.top = '-9999px';
-        textArea.style.left = '-9999px';
-        
-        document.body.appendChild(textArea);
-        textArea.select(); // Seleccionamos su contenido
-        
-        try {
-          document.execCommand('copy'); // Ejecutamos el comando de copiado
-          parent.postMessage({ pluginMessage: { type: 'notify', message: '✅ ¡CSS copiado al portapapeles!' } }, '*');
-        } catch (err) {
-          parent.postMessage({ pluginMessage: { type: 'notify', message: '❌ Error al copiar', error: true } }, '*');
-        }
-        
-        document.body.removeChild(textArea); // Limpiamos el textarea
+        // Mostrar el CSS en el visor y copiar con navigator.clipboard (fallback a textarea)
+        const css = msg.css || '';
+        const viewer = document.getElementById('code-viewer');
+        const cssBlock = document.getElementById('css-block');
+        cssBlock.textContent = css;
+        viewer.classList.remove('hidden');
+        viewer.setAttribute('aria-hidden', 'false');
+
+        // Intentar copiar con navigator.clipboard
+        (async () => {
+          try {
+            if (navigator.clipboard && navigator.clipboard.writeText) {
+              await navigator.clipboard.writeText(css);
+            } else {
+              // Fallback
+              const ta = document.createElement('textarea');
+              ta.value = css;
+              ta.style.position = 'fixed'; ta.style.left = '-9999px'; ta.style.top = '-9999px';
+              document.body.appendChild(ta);
+              ta.select();
+              document.execCommand('copy');
+              document.body.removeChild(ta);
+            }
+            parent.postMessage({ pluginMessage: { type: 'notify', message: '✅ ¡CSS copiado al portapapeles!' } }, '*');
+          } catch (err) {
+            parent.postMessage({ pluginMessage: { type: 'notify', message: '❌ Error al copiar', error: true } }, '*');
+          }
+        })();
       }
+    }
+
+    // Code viewer actions
+    const copyBtn = document.getElementById('copy-css');
+    const downloadBtn = document.getElementById('download-css');
+    const closeBtn = document.getElementById('close-viewer');
+    copyBtn.onclick = async () => {
+      const css = document.getElementById('css-block').textContent || '';
+      try {
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+          await navigator.clipboard.writeText(css);
+        } else {
+          const ta = document.createElement('textarea'); ta.value = css; document.body.appendChild(ta); ta.select(); document.execCommand('copy'); document.body.removeChild(ta);
+        }
+        parent.postMessage({ pluginMessage: { type: 'notify', message: '✅ ¡CSS copiado al portapapeles!' } }, '*');
+      } catch (err) {
+        parent.postMessage({ pluginMessage: { type: 'notify', message: '❌ Error al copiar', error: true } }, '*');
+      }
+    }
+    downloadBtn.onclick = () => {
+      const css = document.getElementById('css-block').textContent || '';
+      const blob = new Blob([css], { type: 'text/css;charset=utf-8' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url; a.download = 'export.css'; document.body.appendChild(a); a.click(); URL.revokeObjectURL(url); document.body.removeChild(a);
+    }
+    closeBtn.onclick = () => {
+      const viewer = document.getElementById('code-viewer');
+      viewer.classList.add('hidden');
+      viewer.setAttribute('aria-hidden', 'true');
     }
   </script>
 </body>
